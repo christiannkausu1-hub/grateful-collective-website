@@ -1,21 +1,13 @@
-THE GRATEFUL COLLECTIVE — GC INSTALLABLE WEB APP
+THE GRATEFUL COLLECTIVE — GC APP PACKAGE
 
-FILES
-- index.html: website/app
-- manifest.webmanifest: installable app metadata
-- service-worker.js: offline shell and update checking
-- icons/: GC app icons
+Upload these files and folders to the ROOT of your connected GitHub repository, then commit changes. Cloudflare Pages should redeploy automatically.
 
-DEPLOY
-Upload the contents of this folder to the ROOT of your existing Cloudflare Pages project and deploy. Keep the same Cloudflare Pages URL so the installed app can receive site updates.
+IMPORTANT: In Supabase SQL Editor, run the statements in SUPABASE_MIGRATION.sql once before using the updated PUPILS section. This adds the newcomer status and editable requirement checklist fields.
 
-PUPIL REQUIREMENTS DATABASE CHANGE
-The new optional Requirements field is stored in public.pupils.requirements. Run this once in Supabase SQL Editor if that column does not already exist:
+Newcomer requirements: School fees in full, Ream of paper, Uniform, Form, Two big tissue, Soap. Tick items later from the PUPIL REGISTER as each item is received.
 
-ALTER TABLE public.pupils ADD COLUMN IF NOT EXISTS requirements text;
+This is an installable web app (PWA), not a native APK.
 
-APP INSTALL
-Open the deployed Cloudflare Pages URL in Chrome on Android, open the browser menu, and choose Install app or Add to Home screen. This is a PWA, not a native APK.
 
-SECURITY
-Do not add a Supabase service_role key to this app. The existing public/publishable key is intended for client-side use with correctly configured Supabase RLS policies.
+SCHOOL LOGO AND TRANSFER NOTES
+The school logo is stored at icons/school-logo.jpg. Transfers are recorded in the existing transactions table as Income, area School, category Transfer, so they contribute to the school total. Class lists download as PNG images from the Pupils section.
