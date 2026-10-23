@@ -10,4 +10,4 @@ This is an installable web app (PWA), not a native APK.
 
 
 SCHOOL LOGO AND TRANSFER NOTES
-The school logo is stored at icons/school-logo.jpg. Transfers are recorded in the existing transactions table as Income, area School, category Transfer, so they contribute to the school total. Class lists download as PNG images from the Pupils section.
+The school logo is stored at school-logo.jpg. Transfers are recorded in the existing transactions table as Income, area School, category Transfer, so they contribute to the school total. Class lists download as PNG images from the Pupils section.
