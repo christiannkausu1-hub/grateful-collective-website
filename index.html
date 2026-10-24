@@ -19,6 +19,25 @@
 .panel > h3 + button,.panel > h3 + .actions,.card > button{position:absolute;top:10px;right:12px;margin:0}
 .panel:has(> h3 + button),.panel:has(> h3 + .actions){padding-top:58px}
 @media(max-width:650px){.panel > form > .actions{top:9px;right:9px}.panel > form > .actions button{width:auto!important;min-height:36px}.panel:has(> form > .actions){padding-top:58px}}
+/* Card header alignment: keep titles and action buttons on one horizontal row */
+.panel{position:relative}
+.panel:has(> form > .actions){padding-top:17px}
+.panel > h3{display:flex;align-items:center;min-height:36px;margin:0 0 14px;padding-right:150px;line-height:1.25;overflow-wrap:anywhere}
+.panel > h3 + button,.panel > h3 + .actions,.panel > form > .actions{position:absolute;top:17px;right:17px;margin:0;display:flex;align-items:center;gap:6px;z-index:2}
+.panel > h3 + button{min-height:36px;padding:7px 12px;font-size:12px}
+.panel > form > .actions button{min-height:36px;padding:7px 12px;font-size:12px}
+.panel:has(> h3 + button),.panel:has(> h3 + .actions){padding-top:17px}
+.panel > div[style*="display:flex"][style*="justify-content:space-between"]:has(> h3){min-height:36px;margin-bottom:8px}
+.panel > div[style*="display:flex"][style*="justify-content:space-between"] > h3{margin:0}
+@media(max-width:650px){
+ .panel,.card{min-width:0}
+ .panel > h3{padding-right:110px;font-size:14px;min-height:34px}
+ .panel > h3 + button,.panel > h3 + .actions,.panel > form > .actions{top:12px;right:12px;gap:4px}
+ .panel > h3 + button,.panel > form > .actions button{font-size:10px;padding:6px 7px;min-height:32px;max-width:46vw}
+ .panel:has(> form > .actions){padding-top:12px}
+ .panel:has(> h3 + button),.panel:has(> h3 + .actions){padding-top:12px}
+}
+
 /* Mobile usability enhancements: appended without changing app logic or database schema */
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{overflow-wrap:anywhere}
