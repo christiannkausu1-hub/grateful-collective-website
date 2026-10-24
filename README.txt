@@ -58,3 +58,12 @@ CONNECTED SECTION NAVIGATION UPDATE (2026-10-24)
 - Styling retains the existing blue palette and adapts to small screens.
 - No database schema or stored records were changed.
 - Test the updated build in your staging/deployment environment before relying on it for live records.
+
+
+CONSOLIDATED USABILITY PACKAGE (2026-10-24)
+- Combines the phone navigation, responsive layouts, table-to-card presentation on narrow screens, clearer dashboard financial summaries, accessibility improvements, and contextual connected-section shortcuts in one build.
+- Keeps the existing blue palette, existing app features, Supabase configuration placeholders, and role-based page permissions.
+- Consolidates section connectivity to one implementation to avoid duplicate shortcut strips.
+- Bumped the service-worker cache version so a new deployment can replace previously cached static files.
+- No database schema changes are required for these UI/navigation refinements.
+- This package has been syntax-checked and archive-checked; real-device/browser testing and live deployment are still required.

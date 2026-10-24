@@ -578,50 +578,6 @@ $('gcRestoreFile').addEventListener('change',async e=>{const file=e.target.files
 
 
 
-/* Section connectivity: contextual blue shortcuts across related work areas. */
-(function gcSectionConnectivity(){
- const related={
-  dashboard:[['reports','Reports & summaries'],['transactions','Expenses'],['rentals','Rental income'],['shops','Shop activity'],['payables','Supplier balances']],
-  pupils:[['lunch','Lunch payments'],['tests','Test fees'],['reports','School reports']],
-  lunch:[['pupils','Pupil register'],['tests','Test payments'],['reports','School reports']],
-  tests:[['pupils','Pupil register'],['lunch','Lunch payments'],['reports','School reports']],
-  payroll:[['reports','Payroll reports'],['transactions','Expenses'],['pupils','Pupil records']],
-  transactions:[['rentals','Rental records'],['shops','Shop activity'],['payables','Supplier balances'],['reports','Reports']],
-  rentals:[['transactions','Income & expenses'],['payables','Supplier bills'],['reports','Reports']],
-  shops:[['transactions','Expenses'],['payables','Supplier invoices'],['reports','Reports']],
-  payables:[['shops','Shop stock & costs'],['transactions','Expenses'],['reports','Reports']],
-  reports:[['transactions','Expenses'],['rentals','Rentals'],['shops','Shops'],['payroll','Payroll'],['pupils','Pupils']],
-  users:[['dashboard','Dashboard'],['reports','Reports']]
- };
- const labels={dashboard:'Dashboard',pupils:'Pupils',lunch:'Lunch payments',tests:'Tests & test payments',payroll:'Workers & payroll',transactions:'Expenses',rentals:'Rentals',shops:'Shops',payables:'Trade payables',reports:'Reports',users:'User management'};
- const descriptions={dashboard:'Move directly from the overview to the area behind a figure.',pupils:'Keep pupil records connected to their school payment sections.',lunch:'Switch between pupil details, lunch receipts and school reporting.',tests:'Connect test-fee records with pupil details and school reporting.',payroll:'Review staff costs alongside the relevant reports and expenses.',transactions:'Follow expense records to related operations or reporting.',rentals:'Move between tenancy records, financial entries and supplier costs.',shops:'Connect shop operations to expenses, supplier invoices and reporting.',payables:'Follow supplier balances to the relevant operational and expense areas.',reports:'Jump from summaries back to the source sections for review.',users:'Quick access to the main workspace and reports.'};
- const allowed=()=>{try{return typeof allowedPages==='function'?allowedPages():new Set(Object.keys(labels))}catch(_){return new Set(Object.keys(labels))}};
- function mount(){
-  document.querySelectorAll('.page').forEach(section=>{
-   const id=section.id.replace(/^page-/,''); if(!related[id]||section.querySelector('.gc-section-links'))return;
-   const permitted=related[id].filter(([key])=>key!==id&&allowed().has(key)); if(!permitted.length)return;
-   const nav=document.createElement('nav');nav.className='gc-section-links';nav.setAttribute('aria-label','Related sections');
-   const intro=document.createElement('div');intro.className='gc-section-links-intro';
-   const title=document.createElement('strong');title.textContent='CONNECTED SECTIONS';
-   const desc=document.createElement('span');desc.textContent=descriptions[id]||'Related areas for your current task.';
-   intro.append(title,desc);
-   const links=document.createElement('div');links.className='gc-section-link-list';
-   permitted.forEach(([key,label])=>{const b=document.createElement('button');b.type='button';b.className='gc-section-link';b.dataset.connectedPage=key;b.innerHTML='<span class="gc-link-dot" aria-hidden="true">↗</span><span>'+label+'</span>';b.addEventListener('click',()=>{if(typeof window.page==='function')window.page(key)});links.appendChild(b)});
-   nav.append(intro,links);
-   const head=section.querySelector('.head'); if(head)head.insertAdjacentElement('afterend',nav);else section.insertAdjacentElement('afterbegin',nav);
-  });
- }
- const style=document.createElement('style');style.textContent=`
- .gc-section-links{display:grid;grid-template-columns:minmax(160px,.8fr) minmax(0,2fr);gap:12px;align-items:center;margin:0 0 18px;padding:13px 14px;border:1px solid #b5d0f2;border-left:4px solid #007acc;border-radius:13px;background:linear-gradient(110deg,#eaf4ff,#fff 72%)}
- .gc-section-links-intro{display:grid;gap:3px;min-width:0}.gc-section-links-intro strong{color:#003366;font-size:11px;letter-spacing:.08em}.gc-section-links-intro span{color:#315b82;font-size:12px;line-height:1.4}
- .gc-section-link-list{display:flex;gap:7px;flex-wrap:wrap;min-width:0}.gc-section-link{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:7px 10px;border:1px solid #c5dcf7;border-radius:9px;background:#fff;color:#003366;font-size:12px;font-weight:750;text-align:left}.gc-section-link:hover,.gc-section-link:focus-visible{background:#dcecff;border-color:#007acc;color:#003366}.gc-link-dot{display:grid;place-items:center;width:20px;height:20px;flex:0 0 20px;border-radius:6px;background:#cce0ff;color:#00509e;font-size:13px}
- @media(max-width:900px){.gc-section-links{grid-template-columns:1fr;gap:9px}.gc-section-link-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.gc-section-link{min-width:0;overflow-wrap:anywhere}}
- @media(max-width:420px){.gc-section-links{padding:10px;gap:8px}.gc-section-link-list{grid-template-columns:1fr}.gc-section-link{min-height:42px;font-size:12px}}
- `;document.head.appendChild(style);
- mount();
- const observer=new MutationObserver(()=>mount());observer.observe(document.getElementById('app')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-})();
-
 /* Accessibility polish: announce the current section and label dynamically rendered tables. */
 (function gcUsabilityPolish(){
  const side=document.getElementById('side');
@@ -649,9 +605,12 @@ $('gcRestoreFile').addEventListener('change',async e=>{const file=e.target.files
 <style id="gc-connected-sections-style">
 .connected-sections{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 16px;padding:12px 14px;border:1px solid #d4e3f7;border-radius:14px;background:linear-gradient(110deg,#f3f8ff,#fff);}
 .connected-sections .connected-label{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#41658e;margin-right:3px;}
-.connected-sections button{appearance:none;border:1px solid #c5d9f2;border-radius:999px;background:#fff;color:#1456a0;font:600 12px/1.2 inherit;padding:9px 12px;cursor:pointer;transition:background .15s,border-color .15s,transform .15s;}
+.connected-sections button{appearance:none;border:1px solid #c5d9f2;border-radius:999px;background:#fff;color:#1456a0;font-family:inherit;font-size:12px;font-weight:600;line-height:1.2;padding:9px 12px;cursor:pointer;transition:background .15s,border-color .15s,transform .15s;}
 .connected-sections button:hover,.connected-sections button:focus-visible{background:#e5f0ff;border-color:#4386d5;outline:2px solid #8dbcf1;outline-offset:2px;}
 .connected-sections button[aria-current="page"]{background:#0b5fba;color:#fff;border-color:#0b5fba;}
+.connected-sections button:focus-visible{outline:3px solid #8dbcf1;outline-offset:2px}
+#page-dashboard>.cards:first-of-type .card{min-height:112px;display:flex;flex-direction:column;justify-content:center}
+#page-dashboard>.cards:first-of-type .statvalue{overflow-wrap:anywhere}
 .connected-sections button:active{transform:translateY(1px);}
 @media(max-width:650px){.connected-sections{gap:7px;padding:10px;margin-bottom:12px}.connected-sections .connected-label{width:100%;margin-bottom:1px}.connected-sections button{font-size:11px;padding:9px 10px;max-width:100%;}}
 @media(prefers-reduced-motion:reduce){.connected-sections button{transition:none}}
@@ -698,6 +657,7 @@ $('gcRestoreFile').addEventListener('change',async e=>{const file=e.target.files
   const wrapped=async function(...args){const result=await original.apply(this,args);syncLinks();return result};wrapped.__gcConnectedWrapped=true;window.page=wrapped;
  }
  const app=document.getElementById('app');if(app&&typeof MutationObserver!=='undefined')new MutationObserver(syncLinks).observe(app,{subtree:true,attributes:true,attributeFilter:['class']});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncLinks()});
  window.addEventListener('gc-role-navigation-updated',syncLinks);
 })();
 </script>
