@@ -4,7 +4,7 @@ Contents include the existing website and an additive Supabase migration. Existi
 
 DEPLOY
 1. Download and unzip the complete package.
-2. In Supabase Dashboard > SQL Editor, run SUPABASE_MIGRATION.sql once. It adds missing pupil fields and the new audit, reconciliation, transfer, and shop-stock tables. It does not drop existing records.
+2. Database migration: the mobile UX update itself needs NO SQL migration. If you have not previously deployed the existing Grateful Collective enhancements, review SUPABASE_MIGRATION.sql and run it once in Supabase Dashboard > SQL Editor; it adds the app features described below and does not drop existing records. Do not rerun it blindly if the existing feature migration has already been applied.
 3. Commit/upload the package contents to the ROOT of the connected GitHub repository (replace the existing files when prompted). Cloudflare Pages should redeploy automatically.
 4. Wait for the Cloudflare Pages deployment to finish, then open the website and sign in. If the PWA shows an old version, close it and reopen; service worker update checking is enabled.
 5. Test each feature using a small test record before relying on it for bookkeeping.
@@ -33,3 +33,20 @@ ACCOUNTING NOTES
 
 IMPORTANT TRANSFER DISTINCTION
 The existing Pupils section uses category “Transfer” for a school pupil-transfer/payment record; those existing records remain valid school receipts and are not suppressed. The new Dashboard “Record a transfer” form is specifically for moving funds between Bank, Cash, Airtel Money and MTN MoMo. Use that form for channel-to-channel movements; these are stored separately and never added to income or expenses.
+
+MOBILE UX UPDATE (2026-10-24)
+- Added a role-aware mobile bottom navigation bar for Home, Records, Add/quick access and Menu.
+- Added a dimmed backdrop for the slide-out menu, tap-outside dismissal, Escape-key dismissal and expanded-state accessibility labels.
+- Tables rendered through the shared table helper now include column labels and display as stacked, readable record cards on narrow phone screens; desktop tables remain tables.
+- Improved phone visibility for payment-channel cards, pupil summary cards and class-count tiles.
+- Simplified mobile form actions, expanded touch targets, preserved visible keyboard focus, supported reduced-motion preferences and respected phone safe-area insets.
+- Clarified dashboard labels from “Total positive/negative” to “Total income/expenses”.
+- This UI-only update does not change the database schema, Supabase data logic or role permissions. No new SQL migration is required for these mobile changes.
+- Test with administrator, school_staff and shop_manager accounts on a narrow screen before deployment. Confirm that each role only sees its permitted sections and that Add/Records shortcuts behave as expected.
+
+
+SECTION CONNECTIVITY UPDATE (2026-10-24)
+- Preserved the existing blue brand palette.
+- Added a responsive Connected Sections strip to each workspace section with shortcuts to related permitted sections.
+- Shortcuts are role-aware and update after sign-in/role navigation; they use the existing page navigation and do not alter records or database schema.
+- Inline JavaScript syntax checks and ZIP integrity checks passed. Real-device/browser interaction testing and live deployment have not been performed.
