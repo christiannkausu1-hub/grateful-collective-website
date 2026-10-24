@@ -123,6 +123,16 @@ body{background:linear-gradient(135deg,#eef5ff,#e3efff);color:var(--ink)}
 .gc-confirm-delete{background:var(--red);color:#fff}
 @keyframes gcConfirmIn{from{opacity:0;transform:translateY(7px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.gc-confirm-card{animation:none}}
+/* Clear full-width workspace when the desktop navigation is closed */
+.main{width:100%;min-width:0;overflow-x:hidden}
+.content{width:100%;min-width:0}
+.layout.sidebar-collapsed{grid-template-columns:minmax(0,1fr)}
+.layout.sidebar-collapsed .main{grid-column:1/-1;width:100%;max-width:none}
+.layout.sidebar-collapsed .content{max-width:none;margin:0;width:100%;padding-left:clamp(14px,2.2vw,34px);padding-right:clamp(14px,2.2vw,34px)}
+.layout.sidebar-collapsed .grid2{grid-template-columns:minmax(0,1.45fr) minmax(280px,.8fr)}
+.layout.sidebar-collapsed .cards{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+@media(max-width:900px){.layout.sidebar-collapsed .grid2{grid-template-columns:minmax(0,1fr)}.layout.sidebar-collapsed .cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.layout.sidebar-collapsed .content{padding:12px;padding-bottom:28px}.layout.sidebar-collapsed .cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style></head><body>
 <section id="auth"><div class="authbox"><div class="logo"><span class="gc-mark">GC</span> THE GRATEFUL <span>COLLECTIVE</span></div><h2 id="authTitle">Sign in to your accounts</h2><p class="muted" id="authHelp">Use your authorized email and password.</p>
 <form id="authForm"><label>Email address</label><input id="email" type="email" autocomplete="username" required placeholder="you@example.com"><label>Password</label><input id="password" type="password" autocomplete="current-password" required minlength="8" placeholder="At least 8 characters"><label style="display:flex;align-items:center;gap:8px;margin:8px 0"><input id="showLoginPassword" type="checkbox" style="width:auto;min-height:0"> SHOW PASSWORD</label><button class="primary" id="authSubmit">Sign in</button></form>
