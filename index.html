@@ -644,4 +644,62 @@ $('gcRestoreFile').addEventListener('change',async e=>{const file=e.target.files
  window.addEventListener('resize',()=>{if(!isMobile()&&side?.classList.contains('open'))closeMobileMenu()},{passive:true});
 })();
 </script>
+
+/* Connected section shortcuts: keep related workflows one tap away. */
+<style id="gc-connected-sections-style">
+.connected-sections{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 16px;padding:12px 14px;border:1px solid #d4e3f7;border-radius:14px;background:linear-gradient(110deg,#f3f8ff,#fff);}
+.connected-sections .connected-label{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#41658e;margin-right:3px;}
+.connected-sections button{appearance:none;border:1px solid #c5d9f2;border-radius:999px;background:#fff;color:#1456a0;font:600 12px/1.2 inherit;padding:9px 12px;cursor:pointer;transition:background .15s,border-color .15s,transform .15s;}
+.connected-sections button:hover,.connected-sections button:focus-visible{background:#e5f0ff;border-color:#4386d5;outline:2px solid #8dbcf1;outline-offset:2px;}
+.connected-sections button[aria-current="page"]{background:#0b5fba;color:#fff;border-color:#0b5fba;}
+.connected-sections button:active{transform:translateY(1px);}
+@media(max-width:650px){.connected-sections{gap:7px;padding:10px;margin-bottom:12px}.connected-sections .connected-label{width:100%;margin-bottom:1px}.connected-sections button{font-size:11px;padding:9px 10px;max-width:100%;}}
+@media(prefers-reduced-motion:reduce){.connected-sections button{transition:none}}
+</style>
+<script id="gc-connected-sections-script">
+(function gcConnectedSections(){
+ const labels={dashboard:'Dashboard',pupils:'Pupils',lunch:'Lunch payments',tests:'Tests & fees',payroll:'Workers & payroll',transactions:'Expenses',rentals:'Rentals',shops:'Shops',payables:'Trade payables',reports:'Reports',users:'User management'};
+ const related={
+  dashboard:['pupils','payroll','transactions','rentals','shops','reports'],
+  pupils:['lunch','tests','reports'],
+  lunch:['pupils','tests','reports'],
+  tests:['pupils','lunch','reports'],
+  payroll:['pupils','transactions','reports'],
+  transactions:['shops','rentals','payables','reports'],
+  rentals:['transactions','payables','reports'],
+  shops:['transactions','payables','reports'],
+  payables:['transactions','shops','rentals','reports'],
+  reports:['dashboard','pupils','lunch','tests','payroll','transactions','rentals','shops','payables'],
+  users:['dashboard']
+ };
+ function addLinks(){
+  Object.keys(related).forEach(key=>{
+   const section=document.getElementById('page-'+key);if(!section||section.querySelector('.connected-sections'))return;
+   const head=section.querySelector('.head');if(!head)return;
+   const nav=document.createElement('nav');nav.className='connected-sections';nav.setAttribute('aria-label','Related sections');
+   const title=document.createElement('span');title.className='connected-label';title.textContent='Go to related section';nav.appendChild(title);
+   related[key].forEach(target=>{
+    const btn=document.createElement('button');btn.type='button';btn.dataset.connectedPage=target;btn.textContent=labels[target];btn.addEventListener('click',()=>{if(typeof window.page==='function')window.page(target)});nav.appendChild(btn);
+   });
+   head.insertAdjacentElement('afterend',nav);
+  });
+ }
+ function syncLinks(){
+  let allowed=new Set(Object.keys(labels));try{if(typeof allowedPages==='function')allowed=allowedPages()}catch(e){}
+  document.querySelectorAll('[data-connected-page]').forEach(btn=>{
+   const target=btn.dataset.connectedPage;btn.hidden=!allowed.has(target);btn.setAttribute('aria-label','Open '+(labels[target]||target));
+  });
+  const active=document.querySelector('.page:not(.hidden)')?.id?.replace(/^page-/,'');
+  document.querySelectorAll('[data-connected-page]').forEach(btn=>{if(btn.dataset.connectedPage===active)btn.setAttribute('aria-current','page');else btn.removeAttribute('aria-current')});
+ }
+ addLinks();syncLinks();
+ const original=window.page;
+ if(typeof original==='function'&&!original.__gcConnectedWrapped){
+  const wrapped=async function(...args){const result=await original.apply(this,args);syncLinks();return result};wrapped.__gcConnectedWrapped=true;window.page=wrapped;
+ }
+ const app=document.getElementById('app');if(app&&typeof MutationObserver!=='undefined')new MutationObserver(syncLinks).observe(app,{subtree:true,attributes:true,attributeFilter:['class']});
+ window.addEventListener('gc-role-navigation-updated',syncLinks);
+})();
+</script>
+
 </body></html>

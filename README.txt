@@ -50,3 +50,11 @@ SECTION CONNECTIVITY UPDATE (2026-10-24)
 - Added a responsive Connected Sections strip to each workspace section with shortcuts to related permitted sections.
 - Shortcuts are role-aware and update after sign-in/role navigation; they use the existing page navigation and do not alter records or database schema.
 - Inline JavaScript syntax checks and ZIP integrity checks passed. Real-device/browser interaction testing and live deployment have not been performed.
+
+
+CONNECTED SECTION NAVIGATION UPDATE (2026-10-24)
+- Added contextual related-section shortcuts to Dashboard, Pupils, Lunch payments, Tests, Workers & payroll, Expenses, Rentals, Shops, Trade payables, Reports, and User management.
+- Shortcuts use the existing page navigation and are filtered by the signed-in user's allowed sections.
+- Styling retains the existing blue palette and adapts to small screens.
+- No database schema or stored records were changed.
+- Test the updated build in your staging/deployment environment before relying on it for live records.
