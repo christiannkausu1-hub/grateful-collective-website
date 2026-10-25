@@ -1,10 +1,14 @@
+THE GRATEFUL COLLECTIVE — COMPANY ACCOUNTS PLATFORM
+
+This is a Grateful Collective company website / online accounts management application. School operations are one business section, alongside rentals, shops, payroll, expenses, payables and reports. The product is not presented as a standalone school website.
+
 THE GRATEFUL COLLECTIVE — DEPLOYMENT PACKAGE
 
 Contents include the existing website and an additive Supabase migration. Existing app sections, design, and records are retained. Do not delete existing Supabase tables.
 
 DEPLOY
 1. Download and unzip the complete package.
-2. Database migration: the mobile UX update itself needs NO SQL migration. If you have not previously deployed the existing Grateful Collective enhancements, review SUPABASE_MIGRATION.sql and run it once in Supabase Dashboard > SQL Editor; it adds the app features described below and does not drop existing records. Do not rerun it blindly if the existing feature migration has already been applied.
+2. Database migrations: back up the Supabase project first. If not already applied, run SUPABASE_MIGRATION.sql / GC_ENHANCEMENTS.sql as appropriate for your existing deployment. Then run the new additive GC_SHOPS_UPGRADE.sql once in Supabase Dashboard > SQL Editor to add shop product metadata, receipts, customer credit balances/payments and stock-loss adjustment support. It does not drop existing tables or records and is safe to re-run. Do not skip the shop upgrade or the new shop forms will not save.
 3. Commit/upload the package contents to the ROOT of the connected GitHub repository (replace the existing files when prompted). Cloudflare Pages should redeploy automatically.
 4. Wait for the Cloudflare Pages deployment to finish, then open the website and sign in. If the PWA shows an old version, close it and reopen; service worker update checking is enabled.
 5. Test each feature using a small test record before relying on it for bookkeeping.
@@ -67,3 +71,80 @@ CONSOLIDATED USABILITY PACKAGE (2026-10-24)
 - Bumped the service-worker cache version so a new deployment can replace previously cached static files.
 - No database schema changes are required for these UI/navigation refinements.
 - This package has been syntax-checked and archive-checked; real-device/browser testing and live deployment are still required.
+
+
+SCHOOL EXPENSES + MOBILE NAV UPDATE (2026-10-24)
+- Removed the generated “Go to related section” shortcut panels.
+- Mobile bottom navigation now contains only Home and Menu; Add and Records are removed.
+- Added School > School expenses with categories for teaching materials, stationery, art supplies, cleaning supplies, utilities, repairs, transport, first aid/hygiene, furniture/equipment, water/sanitation and other costs.
+- School expenses are stored as regular transactions with area=School and type=Expense, so they reduce net balance and are included in period expense totals without a separate database table.
+- Added a school-expenses total in Reports and listed expenses in the school operations detail table as negative amounts.
+- Improved the mobile pupils-per-class grid to use wider tiles for clearer class labels.
+- Service-worker cache version bumped to v5 to help browsers update.
+- Please deploy the complete extracted package. This package has not been tested against your live Supabase project; verify permissions and test with a small sample transaction before normal use.
+
+
+MERGED MOBILE + RELATED SECTION UPDATE (2026-10-24)
+- Restores the “GO TO RELATED SECTION” panel contextually on relevant pages.
+- Removes the stray “connected section shortcuts: keep related workflows one tap away” message from the page bottom.
+- Bottom mobile navigation remains simplified to Home and Menu; Add and Records are not restored.
+- Widens the pupil class-count area on mobile, using three columns on typical phones and two on very narrow screens.
+- Service-worker cache version bumped to v6 to help browsers load this deployment.
+
+
+PUPIL MANAGEMENT ADDITIONS (2026-10-24)
+- Extended pupil profiles with admission number, date of birth, guardian name/email, address, emergency contacts and restricted welfare notes.
+- Added attendance register with per-date Present/Absent/Late/Excused status.
+- Added CSV pupil import preview; only new valid rows are inserted.
+- Added pupil fee statement summary and CSV export based on existing records.
+- IMPORTANT: run the updated SUPABASE_MIGRATION.sql in Supabase SQL Editor before using new profile columns or attendance. Back up first and verify RLS policies.
+- Academic marks/report cards and class capacity controls are intentionally not added, following the requested exclusions.
+- CSV import is basic comma-separated format; test with a small file first. No guardian portal or file upload storage is enabled in this update.
+
+REPORTS ENHANCEMENTS (2026-10-24)
+- Reports includes searchable/filterable company transaction analysis by date range, business area and transaction type.
+- Shows filtered income, expenses and net, expense-category breakdown, detailed transactions, CSV export and print support.
+- These totals are explicitly limited to the filtered transactions list; separate rent/lunch/test/payroll records remain in their dedicated report summaries to avoid double-counting.
+- Verify financial totals against source records after deployment; this package has not been tested against the live database.
+
+
+SHOPS MANAGEMENT UPGRADE (2026-10-24)
+- Treats TUCK SHOP, SALOON and GROCERY as separate shop entities with shop-specific stock and sales filters.
+- Product register includes SKU/product code, barcode, category, supplier, unit cost, selling price, stock quantity and low-stock threshold; search, shop/status filters, edit basics and CSV stock export are included.
+- Low-stock and out-of-stock alerts; damage/expiry quantity adjustments are recorded and reduce stock. Stock purchase/restock notes can include the supplier; supplier invoices/payments remain in Trade payables to avoid double-counting.
+- Sales entry supports discounts, payment methods, customer details, partial payments/credit, receipt numbers, printable receipts, sales search and CSV export. Stock reduces when a sale is saved.
+- Customer register, credit-sale balances and credit-payment records are included. Amounts actually received from sales and credit payments are posted to company Shop income transactions; outstanding credit is not treated as cash received. Cancelled sales restore stock and attempt to post a refund expense for the amount recorded as paid. Verify the actual refund/payment channel.
+- Shop sales, stock movements and company accounting transactions remain distinct records. Check for duplicate manual entries before use; never record the same receipt a second time through the generic transaction form.
+- Apply GC_SHOPS_UPGRADE.sql after backing up the database. Test with a small sale, credit payment, cancellation and stock adjustment before live use. This package has not been tested against your live Supabase database or payment workflows.
+
+
+PAYROLL MANAGEMENT UPDATE (2026-10-24)
+- Expanded employee profiles with department/business area, employment type, pay frequency, contact details, start date and optional payment-provider/account fields. Includes the three separate shop entities TUCK SHOP, SALOON and GROCERY.
+- Payroll preparation now records overtime, bonuses, commission, gross pay, manual PAYE/NAPSA/NHIMA values, advance deductions, other deductions, payment date/reference and approval timestamp. Net pay is calculated from the entered values. Statutory amounts are NOT auto-certified; verify current Zambian requirements before approval.
+- Added payroll status progression Pending Review -> Approved -> Paid, printable payslips, enriched CSV export and payroll audit fields.
+- Added staff advance/loan register with repayment tracking, leave request register with approve/reject actions, and attendance/hours/overtime register. These use separate tables and do not automatically change payroll; apply approved deductions and attendance adjustments to the relevant payroll run.
+- IMPORTANT: Back up Supabase first, then run the updated SUPABASE_MIGRATION.sql. It adds columns and tables without dropping existing records. Confirm RLS policies and test with sample employee, payroll, advance, leave and attendance records before live use.
+- Payroll includes sensitive employee data. Restrict account access, avoid sharing exports, and confirm your deployment's role policies before storing bank/payment details.
+- Validation performed: ZIP archive integrity and targeted JavaScript syntax checks. No live Supabase/browser end-to-end test has been performed.
+
+TRADE PAYABLES UPGRADE (2026-10-24)
+- Added supplier opening balances and active/inactive supplier status.
+- Invoice records now support business-area tagging (Administration, School, TUCK SHOP, SALOON, GROCERY, Rentals, Other), subtotal, discount, tax, credit terms and an optional invoice/statement URL reference.
+- Invoice total is calculated from subtotal minus discount plus tax. The app warns about duplicate invoice numbers for the same supplier before saving.
+- Added due-in-seven-days and paid-this-month dashboard cards, filters by business area/status, and ageing buckets (Current, 1–30, 31–60, 61–90 and 90+ days) with CSV export.
+- Payment entries remain allocated to their invoice and the app keeps the existing policy of not automatically creating duplicate accounting expenses. Opening balances are supplier-level balances and do not have individual due dates or payment allocations.
+- IMPORTANT: back up your database, then run GC_PAYABLES_UPGRADE.sql in Supabase SQL Editor before using the new supplier/invoice fields. Test with sample records first and confirm supplier balances against source documents. No live Supabase/browser end-to-end test has been performed.
+
+
+EXPENSES MANAGEMENT UPGRADE (October 2026)
+-----------------------------------------
+The Expenses page now includes a company-wide expense management centre: pending/approved/rejected/paid workflow, business-area and category tagging, private receipt/invoice attachments, invoice-reference duplicate checks, recurring templates with manual generation of due items, petty cash book, department/category monthly budgets, CSV export, print view and date/area report filters. Approved expenses are posted once to the existing transactions table and linked by transaction id; approval status changes do not create a second posting when a transaction id is already stored. Dashboard cards show month-to-date approved, pending, overdue and paid totals.
+
+DATABASE SETUP
+1. Back up your Supabase database.
+2. Apply the existing migrations in the documented order, then run GC_EXPENSES_UPGRADE.sql in the Supabase SQL Editor. This creates four additive tables, owner-scoped row-level security policies, an audit trigger where the existing audit function is installed, and a private storage bucket for attachments.
+3. Reload the website and sign in as an administrator. Test with sample records before entering real financial data.
+
+Recurring templates are deliberately not auto-posted; a user must click Generate due items, review the generated pending items and approve them. Attachments are private and opened using a short-lived signed URL. Payroll and Trade Payables remain in their dedicated modules; avoid recording the same supplier invoice again in the general expense register. Payroll is included as a separate report source and is not automatically duplicated into expense entries.
+
+Validation note: archive integrity and JavaScript syntax can be checked locally, but live Supabase/browser behavior must be verified in the user's project after the migration is applied.
