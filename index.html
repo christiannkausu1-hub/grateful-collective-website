@@ -265,11 +265,14 @@ input,select,textarea{color:#102f50;border-color:#9fbce0}input::placeholder,text
 @media(prefers-contrast:more){.card,.panel{border-color:#7194bd}.muted,.statlabel{color:#294b70}.pill{border:1px solid currentColor}}
 
 
-/* School branding, spacious pupil totals, and mutually exclusive navigation */
-#page-pupils{background:linear-gradient(rgba(232,242,255,.90),rgba(232,242,255,.90)),url("school-logo.jpg") center 42%/min(72vw,620px) auto no-repeat;border-radius:16px;padding:12px}
-#page-pupils .school-brand{position:relative;overflow:hidden;background:linear-gradient(110deg,rgba(255,255,255,.93),rgba(214,232,255,.90)),url("school-logo.jpg") center/cover no-repeat}
-#page-pupils .school-brand:after{content:"";position:absolute;inset:0;background:url("school-logo.jpg") center right/auto 145% no-repeat;opacity:.13;pointer-events:none}
+/* School branding: keep the page and school header clean; use the logo only as the Add Pupil card watermark. */
+#page-pupils{background:transparent;border-radius:16px;padding:12px}
+#page-pupils .school-brand{position:relative;overflow:hidden;background:#fff}
+#page-pupils .school-brand:after{content:none}
 #page-pupils .school-brand>*{position:relative;z-index:1}
+#page-pupils .panel:has(#pupilForm){position:relative;isolation:isolate;overflow:hidden;background:#fff}
+#page-pupils .panel:has(#pupilForm):before{content:"";position:absolute;inset:0;background:url("school-logo.jpg") center/contain no-repeat;opacity:.09;pointer-events:none;z-index:-1}
+#page-pupils #pupilForm{position:relative;z-index:1}
 #page-pupils .pupil-summary-grid>.card:nth-child(1),#page-pupils .pupil-summary-grid>.card:nth-child(2){display:flex;flex-direction:column;justify-content:center;min-height:132px}
 #page-pupils .pupil-summary-grid>.card:nth-child(1) .statvalue,#page-pupils .pupil-summary-grid>.card:nth-child(2) .statvalue{font-size:clamp(38px,5vw,58px);line-height:1.05;margin-top:14px}
 #page-pupils #pupilForm #pupilAdmissionNo,#page-pupils #pupilForm #pupilEmergencyName,#page-pupils #pupilForm #pupilGuardianEmail{display:none}
