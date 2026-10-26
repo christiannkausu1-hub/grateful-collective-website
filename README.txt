@@ -148,3 +148,23 @@ DATABASE SETUP
 Recurring templates are deliberately not auto-posted; a user must click Generate due items, review the generated pending items and approve them. Attachments are private and opened using a short-lived signed URL. Payroll and Trade Payables remain in their dedicated modules; avoid recording the same supplier invoice again in the general expense register. Payroll is included as a separate report source and is not automatically duplicated into expense entries.
 
 Validation note: archive integrity and JavaScript syntax can be checked locally, but live Supabase/browser behavior must be verified in the user's project after the migration is applied.
+
+FIXED ASSETS UPDATE (October 2026)
+----------------------------------
+The update adds an administrator-only Fixed assets section to the existing app. It records asset name, category, purchase date, purchase cost, quantity, condition, location and notes, and supports search, viewing, deletion and CSV export.
+
+IMPORTANT DATABASE STEP
+Before using Fixed assets, open Supabase Dashboard -> SQL Editor and run the separate file GC_FIXED_ASSETS.sql from this package. It creates only the new gc_fixed_assets table and administrator-only Row Level Security policies. It does not alter or delete existing pupil, payroll, shop, expense, rental or other records. The policy expects the existing public.gc_user_roles table and its role values (administrator, school_staff, shop_manager), matching this app's current role setup. Do not put a Supabase service-role key in browser code.
+
+PUPIL / LUNCH CHANGES
+- The lunch summary heading reads “LUNCH FOR TODAY”.
+- Medical / welfare notes remain optional.
+- Newcomer document checkboxes are kept in their own NEWCOMER REQUIREMENTS slot in the Add pupil form.
+- The Pupil Register shows a green tick only when every required item is present in the saved requirements_checklist; otherwise it shows a red X for newcomers. The register no longer displays a second editable checklist.
+
+PUBLISHING
+1. Back up the current site and database before publishing.
+2. Run GC_FIXED_ASSETS.sql in Supabase SQL Editor and confirm it completes successfully.
+3. Upload the contents of this ZIP to the existing GitHub repository, preserving the repository's current folder structure. Commit and push the changes so the existing Netlify/Cloudflare deployment builds from GitHub.
+4. Sign in with an administrator account, open Fixed assets, and save a small test asset. Confirm it appears in the register and can be searched/exported.
+5. Confirm school staff and shop manager accounts cannot open Fixed assets. Keep existing Supabase URL and publishable/anon key settings unchanged.
