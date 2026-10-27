@@ -171,3 +171,7 @@ PUBLISHING
 
 
 PUPIL YEAR FIELD: The updated Add Pupil form saves school_year. Run the updated SUPABASE_MIGRATION.sql in the Supabase SQL Editor before deploying this version. The pupil and grade-fee forms now retain entered values when Supabase returns an error and only clear after a successful save.
+
+
+LATEST SCHOOL / PAYROLL UPDATE
+Run the updated SUPABASE_MIGRATION.sql in Supabase SQL Editor before deploying. This adds the pupil payment_method field. The pupil register now supports editing existing pupil profiles. PAYE and NHIMA input fields have been removed from the payroll form; new payroll records save those fields as zero for compatibility with existing database columns.

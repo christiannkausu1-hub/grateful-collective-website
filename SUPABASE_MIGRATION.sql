@@ -154,3 +154,6 @@ do $$ declare t text; begin foreach t in array array['gc_payroll_advances','gc_p
 
 -- Pupil academic year used alongside term in the Add Pupil form.
 ALTER TABLE public.pupils ADD COLUMN IF NOT EXISTS school_year integer NOT NULL DEFAULT EXTRACT(YEAR FROM CURRENT_DATE)::integer;
+
+-- Store the payment method selected when registering a pupil.
+ALTER TABLE public.pupils ADD COLUMN IF NOT EXISTS payment_method text NOT NULL DEFAULT 'Cash';
