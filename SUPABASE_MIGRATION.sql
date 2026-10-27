@@ -151,3 +151,6 @@ do $$ declare t text; begin foreach t in array array['gc_payroll_advances','gc_p
  execute format('drop trigger if exists gc_audit_trigger on public.%I',t);
  execute format('create trigger gc_audit_trigger after insert or update or delete on public.%I for each row execute function public.gc_capture_audit()',t);
  end loop; end $$;
+
+-- Pupil academic year used alongside term in the Add Pupil form.
+ALTER TABLE public.pupils ADD COLUMN IF NOT EXISTS school_year integer NOT NULL DEFAULT EXTRACT(YEAR FROM CURRENT_DATE)::integer;

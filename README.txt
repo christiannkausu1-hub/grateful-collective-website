@@ -168,3 +168,6 @@ PUBLISHING
 3. Upload the contents of this ZIP to the existing GitHub repository, preserving the repository's current folder structure. Commit and push the changes so the existing Netlify/Cloudflare deployment builds from GitHub.
 4. Sign in with an administrator account, open Fixed assets, and save a small test asset. Confirm it appears in the register and can be searched/exported.
 5. Confirm school staff and shop manager accounts cannot open Fixed assets. Keep existing Supabase URL and publishable/anon key settings unchanged.
+
+
+PUPIL YEAR FIELD: The updated Add Pupil form saves school_year. Run the updated SUPABASE_MIGRATION.sql in the Supabase SQL Editor before deploying this version. The pupil and grade-fee forms now retain entered values when Supabase returns an error and only clear after a successful save.
