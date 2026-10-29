@@ -1,0 +1,19 @@
+THE GRATEFUL COLLECTIVE — CLEAN PACKAGE
+
+Website files are kept at the ZIP root for deployment. All SQL migrations are grouped in database-migrations/. README.txt retains deployment and recovery notes. Generated check_*.js, script_*.js and update.py helper artifacts were excluded because they are not website runtime files. All runtime assets and SQL migration files from the source ZIP are retained.
+
+database-migrations/GC_SHOPS_UPGRADE.sql
+gc-192.png
+database-migrations/GC_FIXED_ASSETS.sql
+manifest.webmanifest
+database-migrations/GC_EXPENSES_UPGRADE.sql
+database-migrations/GC_TEACHER_NAPSA_RETURN.sql
+database-migrations/GC_RENTALS_FIX.sql
+database-migrations/GC_ENHANCEMENTS.sql
+gc-512.png
+index.html
+database-migrations/SUPABASE_MIGRATION.sql
+database-migrations/GC_PAYABLES_UPGRADE.sql
+README.txt
+service-worker.js
+school-logo.jpg
