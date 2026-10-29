@@ -175,3 +175,6 @@ PUPIL YEAR FIELD: The updated Add Pupil form saves school_year. Run the updated 
 
 LATEST SCHOOL / PAYROLL UPDATE
 Run the updated SUPABASE_MIGRATION.sql in Supabase SQL Editor before deploying. This adds the pupil payment_method field. The pupil register now supports editing existing pupil profiles. PAYE and NHIMA input fields have been removed from the payroll form; new payroll records save those fields as zero for compatibility with existing database columns.
+
+RENTAL REGISTER / RENT DUE FIX
+If the rental register does not save new units or the rent due/payment tables are empty, open Supabase Dashboard -> SQL Editor and run GC_RENTALS_FIX.sql from this package once. It only adds missing rental columns and backfills missing start dates; it does not delete existing rental records or payments. Then publish the updated website files.
