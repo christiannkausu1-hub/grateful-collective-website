@@ -45,7 +45,7 @@
 .pupil-form-panel:has(.pupil-form-heading){padding-top:17px}
 @media(max-width:650px){.pupil-form-heading{gap:8px}.pupil-form-heading h3{font-size:14px}.pupil-form-heading #pupilSaveBtn{font-size:11px;padding:6px 9px;min-height:34px}}
 /* Mobile usability enhancements: appended without changing app logic or database schema */
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html{scroll-behavior:auto;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{overflow-wrap:anywhere}
 button,input,select{min-height:44px}
 button{touch-action:manipulation;white-space:normal}
@@ -1052,8 +1052,17 @@ window.editPayrollRecord=async function(id){const r=payrollRecords.find(x=>Strin
  document.addEventListener('DOMContentLoaded',init);setTimeout(init,800);
 })();
 </script>
-<style id="gc-tap-card-styles">.school-card-toggle{display:none!important}.school-collapsible-heading{cursor:pointer;user-select:none}.school-collapsible-heading:focus-within{outline:2px solid #66a3ff;outline-offset:2px}.school-collapsible-body[hidden]{display:none!important}.school-collapsible-heading h3{flex:1}</style>
-<script id="gc-tap-anywhere-cards">(function(){function bind(){document.querySelectorAll('.school-collapsible-heading').forEach(head=>{const panel=head.closest('.panel');if(!panel||panel.dataset.tapAnywhereBound==='1')return;panel.dataset.tapAnywhereBound='1';const toggle=()=>{const body=panel.querySelector(':scope > .school-collapsible-body');if(!body)return;const button=head.querySelector('.school-card-toggle');const opening=body.hidden;body.hidden=!opening;if(button){button.textContent=opening?'−':'+';button.setAttribute('aria-expanded',String(opening));button.setAttribute('aria-label',(opening?'Close ':'Open ')+(head.querySelector('h3')?.textContent||'card'));}};panel.addEventListener('click',e=>{const body=panel.querySelector(':scope > .school-collapsible-body');if(!body||!body.hidden)return;if(e.target.closest('button,input,select,textarea,a,label,form'))return;toggle();});head.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!e.target.closest('button')){e.preventDefault();toggle();}});head.setAttribute('tabindex','0');});}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();new MutationObserver(bind).observe(document.body,{childList:true,subtree:true});})();</script>
+<style id="gc-tap-card-styles">
+.school-card-toggle{display:none!important}
+.school-collapsible-heading{cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;outline:none!important;transition:none!important;animation:none!important}
+.school-collapsible-heading:focus,.school-collapsible-heading:focus-within{outline:none!important;box-shadow:none!important}
+.school-collapsible-heading *{transition:none!important;animation:none!important;-webkit-tap-highlight-color:transparent}
+.school-collapsible-body[hidden]{display:none!important}
+.school-collapsible-heading h3{flex:1}
+.panel{transition:none!important;animation:none!important}
+.panel:active,.panel *:active{animation:none!important;transition:none!important;-webkit-tap-highlight-color:transparent}
+</style>
+
 
 <script>
 (function(){
