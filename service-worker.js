@@ -1,4 +1,4 @@
-const CACHE='grateful-collective-v13';
+const CACHE='grateful-collective-v15';
 const CACHE_PREFIX='grateful-collective-';
 const CORE=['/','/index.html','/manifest.webmanifest','/gc-192.png','/gc-512.png','/school-logo.jpg'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting())));

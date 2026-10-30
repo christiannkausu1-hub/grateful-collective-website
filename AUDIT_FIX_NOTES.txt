@@ -45,3 +45,99 @@ FOLLOW-UP REPAIR ROUND (2026-10-30)
 - Updated deployment instructions and package inventory.
 - Static checks: all 17 inline script blocks passed Node.js syntax checks; service-worker.js passed; duplicate HTML IDs: none; ZIP CRC passed; all 21 files are at ZIP root.
 - Live Supabase migration execution, RLS/grant validation and authenticated browser workflows have not been performed. The atomic shop SQL assumes the transactions columns already used by the existing application are present in the live database.
+
+
+ADDITIONAL REPAIRS — 30 OCTOBER 2026
+- Replaced capped shop record queries with pagination and surfaced query errors.
+- Extended backup and restore coverage to fixed assets, teacher NAPSA returns, payroll advances, leave and attendance.
+- Added identity-sequence resynchronisation SQL and restore RPC call.
+- Removed duplicate payment-source aggregation from channel balances; transactions are the canonical ledger, with transfers applied separately.
+- Hardened shop RPC input validation, credit sale handling, payment method validation, and cancellation consistency.
+- Live Supabase execution, permissions and browser workflows still require confirmation in the user's project.
+
+
+ADDITIONAL REPAIR ROUND — 30 OCTOBER 2026
+- Shop movement upgrade preserves unrelated custom check constraints and only replaces the original generated constraint.
+- Stock movements and stock quantity changes now execute in a single RPC transaction.
+- Credit balances are limited to sales explicitly marked Credit.
+- Receipts include every saved sale line; gross-profit cost uses historical unit_cost on sale items and excludes cancelled sales.
+- Cancellation asks for the actual refund channel and refunds later credit payments using their individual recorded channels.
+- Sale and credit-payment submit controls prevent rapid duplicate submissions; cancellation has a re-entry guard.
+- Refresh failures after a successful RPC now explicitly say the database operation succeeded and must not be resubmitted.
+- Backup validation, app/format metadata, restore preview, per-table result reporting, audit-history restore, sequence repair and post-restore refresh were added.
+- Shop sales, stock movements and audit events are no longer cut off by fixed display slices.
+- Customer duplicate matching is enforced in the current UI; a database uniqueness migration is not forced because existing duplicate data may already exist.
+- Restore is still sequential across tables; it is not a global transaction.
+- Static checks only; no live Supabase or browser test performed.
+
+ADDITIONAL SHOP AUDIT REPAIRS (30 OCTOBER 2026)
+- Fixed cancellation refunds so later credit repayments are refunded even when the original credit sale was recorded with zero initial payment.
+- Credit repayment RPC now accepts only sales explicitly recorded as Credit.
+- Non-credit sales must be fully paid at the time of sale; unpaid balances must be recorded as Credit so customer balances and payment history reconcile.
+- Sales reject inactive products at the database level and the product selector hides archived products.
+- Product creation now uses an atomic RPC; opening stock creates an opening RESTOCK movement in the same transaction.
+- Product names, codes and barcodes have owner-scoped uniqueness indexes when existing data contains no duplicates. Existing duplicate historical data is preserved.
+- Manual stock movements are limited to RESTOCK, DAMAGE and EXPIRED. Sales must use the sale workflow; unsupported manual SALE/EXPENSE entries are rejected to prevent movements without matching sale/accounting records.
+- Stock movements validate date, quantity precision, money precision, amount calculation and description length. Damage/expiry also create an expense transaction atomically.
+- Product editing validates numeric values and offers archive/active control. Existing sale-item unit costs remain historical.
+- Shop profit now uses completed sale receipts and saved sale-item costs, excludes cancelled sales, and separately deducts damage/expiry losses.
+- Customer credit balances and dashboard arrears include outstanding shop credit. Credit history and receipts show later payment channels and cancellation status.
+- Reconciliation rejects future dates and negative/non-cent balances; the dashboard uses the latest reconciliation not later than today.
+- Transfer amount/date validation was tightened and transfer history is no longer clipped to 50 rows.
+- Fee waivers/adjustments are not automatically inferred: this package does not have an established pupil fee-adjustment schema or verified rules. Existing pupil arrears continue to use configured grade fee less recorded pupil payments.
+- Restock movements record stock and cost history, but do not automatically create supplier invoices/payables because supplier-payment terms and the live payable schema must be confirmed separately. Continue recording supplier obligations in Trade Payables.
+
+ADDITIONAL REPAIRS IN THIS PACKAGE (2026-10-30)
+- Teacher NAPSA refresh failures no longer clear previously loaded return rows; successful refresh resets the warning state.
+- Pupil attendance now starts with an explicit unselected status and refuses to save while any pupil is unmarked; the save control is protected against duplicate submission and reports the number saved.
+- Pupil CSV import now parses quoted fields including embedded commas/newlines, rejects malformed quoting, validates required headers, normalizes pupil name/class duplicate checks, detects duplicate admission numbers, validates ISO date-of-birth format, and reports total/valid/skipped preview counts.
+- Product editing validates field lengths and checks duplicate product names, codes and barcodes in the loaded product set before update.
+- Receipt printing waits for the print document to load and enables the print action only after loading.
+- Shop SQL now compares customer phone numbers using digits-only normalization, adds a guarded normalized-phone uniqueness index when historical data permits, adds guarded sale financial-consistency checks when historical rows permit, and makes audit-log restore idempotent while assigning restored audit changes to the authenticated account.
+
+IMPORTANT LIMITS
+- These are static code and package repairs. They do not prove that live Supabase migrations have executed or that existing production data satisfies optional guarded indexes/constraints.
+- Some items in the previous 50-item audit were already implemented in this package (including all-line receipt rendering, refunding later credit payments, sale receipt uniqueness on newly created shop tables, historical unit cost on sale items, audit-log backup inclusion, and identity-sequence synchronization). Those were not duplicated as new patches.
+- Supplier invoice/payable integration for stock purchases, historical product-cost change reporting, pupil fee waiver/adjustment accounting, and a fully atomic database-wide multi-table restore require agreed accounting rules and/or live schema confirmation. They are not claimed as completed.
+
+ADDITIONAL AUDIT REPAIR UPDATE — 2026-10-30
+- Shop cancellation now uses a direct sale_id relationship for new sale movements, with a legacy description fallback for earlier records.
+- Cancellation records a reason, timestamp and cancelling user, and refunds later credit repayments separately while preserving each original payment channel unless an override is selected.
+- Sale rows record the creating user; receipt identifiers use a longer random token and database uniqueness remains enforced.
+- Opening stock now has a selectable historical date and a distinct OPENING movement type.
+- Product unit-cost changes are retained in gc_shop_product_cost_history.
+- Reconciliation wording now defines the opening balance as the start-of-day balance; movements on that date are included.
+- Channel reconciliation ignores transaction types other than Income and Expense instead of treating unknown types as income.
+- Stock views include last movement/last sale dates, replenishment-cost estimates, active/archived stock valuation, date-filtered movements and reason/valuation confirmation for stock losses.
+- Backup files include export metadata and per-table counts; restore validates duplicate IDs, owner IDs and timestamps, previews new versus overwritten records, and restores product cost history when present.
+- Audit restore now has size/row limits and deduplicates matching historical events.
+- Identity-sequence repair is restricted to users with the administrator role.
+
+LIMITATIONS NOT CLAIMED AS FIXED:
+- Restock movements are still not automatically converted into supplier invoices/payables; the shop workflow must remain linked to the separate Trade Payables workflow until a supplier-invoice schema and matching UI are designed.
+- A restore still runs table-by-table and is not a single database-wide transaction.
+- Historical running balances per transfer and a dedicated cancellation/refund ledger remain separate reporting enhancements.
+- Live Supabase execution, existing production schema compatibility, RLS and browser workflows have not been verified in this environment.
+
+
+ADDITIONAL 100-FINDING FOLLOW-UP PACKAGE UPDATE (2026-10-30)
+Implemented in this package: payroll Paid-date validation; configurable teacher return account/year/month fields and input validation; backup format v3 with explicit optional-table omissions and v2 compatibility; per-table restore reporting; original sale price and override capture; credit-payment accounting transaction linkage and balance-after snapshots; dedicated refund ledger with payment-level source/channel/reason/date and accounting links; stricter cancellation checks; stock movement before/after quantities; future-date and archived-restock checks; audit restore batch cap; sequence sync for refund ledger.
+Not safely completed without further business/schema decisions or live database verification: multi-product receipt redesign, supplier invoice/payable integration for restocks, margin/discount authorisation policies, refund issuance workflow (recorded versus actually issued), approved transfer/reconciliation locking and reversals, historic channel snapshots, full accrual/cash reporting redesign, rental historical statement redesign, NAPSA statutory rate/cap confirmation, full database-wide transactional restore, and live RLS/role verification.
+No SQL was run.
+
+
+ADDITIONAL 100-FINDING AUDIT PATCH (30 OCTOBER 2026)
+- Removed the fixed employer account number from the teacher NAPSA form. Employer account number must be entered for each return.
+- Added separately editable employer and employee contribution rates, stored per return. The previous 5% value is retained as an editable starting value, not represented as a verified statutory rate; statutory rates/caps must be confirmed with NAPSA.
+- Teacher-return RLS policies now restrict access to administrators and require the selected worker to belong to the same user and have an exact Teacher or Owner job title.
+- Main administrator refresh retains last known-good data for tables whose refresh query fails, instead of silently clearing those module datasets.
+- Dashboard payroll movement uses payment_date when available and skips rows with an accounting transaction link.
+- Service worker cache bumped to v14.
+- Sequence repair checks for the role table before role verification and catches individual table sequence failures with warnings.
+- Static validation only; no live Supabase or browser execution. Several of the 100 findings require business rules or schema changes and are not all safely resolvable from this package alone.
+
+LATEST PASS — VERIFIED CODE CORRECTIONS
+- Ordinary Workers & Payroll no longer estimates or displays NAPSA using a hardcoded 5% rate. Teacher statutory returns remain in the separate Teacher Returns register.
+- Payroll creation now checks for an existing record for the same worker and pay period before inserting, and reports query failures rather than proceeding blindly.
+- Service-worker cache advanced to grateful-collective-v15 so installed clients fetch the updated application shell.
+- All other unverified items remain subject to live Supabase schema/RLS and browser workflow review; this pass does not claim 150 independently confirmed defects were found or fixed.

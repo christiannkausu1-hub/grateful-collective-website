@@ -8,7 +8,7 @@ Contents include the existing website and an additive Supabase migration. Existi
 
 DEPLOY
 1. Download and unzip the complete package.
-2. Database migrations: back up the Supabase project first. If not already applied, run SUPABASE_MIGRATION.sql / GC_ENHANCEMENTS.sql as appropriate for your existing deployment. Then run GC_SHOPS_UPGRADE.sql if it has not already been applied. After that, run GC_SHOPS_ATOMIC_OPERATIONS.sql in Supabase Dashboard > SQL Editor. The atomic operations migration makes each shop sale, credit payment and cancellation a single database transaction, including stock and accounting updates. Both migrations are additive and do not drop existing tables or records.
+2. Database migrations: back up the Supabase project first. If not already applied, run SUPABASE_MIGRATION.sql / GC_ENHANCEMENTS.sql as appropriate for your existing deployment. Then run GC_SHOPS_UPGRADE.sql if it has not already been applied. After that, run GC_SHOPS_ATOMIC_OPERATIONS.sql in Supabase Dashboard > SQL Editor. The atomic operations migration makes each shop sale, credit payment, cancellation and stock adjustment a single database transaction, including stock and accounting updates. Run GC_RESTORE_SEQUENCE_FIX.sql after the atomic operations file; the atomic operations file also installs the owner-checked audit-history restore RPC. Both migrations are additive and do not drop existing tables or records.
 3. Commit/upload the package contents to the ROOT of the connected GitHub repository (replace the existing files when prompted). Cloudflare Pages should redeploy automatically.
 4. Wait for the Cloudflare Pages deployment to finish, then open the website and sign in. If the PWA shows an old version, close it and reopen; service worker update checking is enabled.
 5. Test each feature using a small test record before relying on it for bookkeeping.
@@ -32,7 +32,7 @@ RECOVERY
 ACCOUNTING NOTES
 - Reconciliation figures are only as accurate as the records and opening balances entered. Compare them with real bank/mobile-money statements and a physical cash count.
 - A transfer must be entered only in the Transfers form, not again as income or expense.
-- Stock profit is an estimate based on current product unit cost and recorded sales; update unit costs when purchase costs change. Stock movements do not create entries in the existing accounting transactions table automatically.
+- Stock profit uses the historical unit cost saved on each sale item and excludes cancelled sales; existing stock movement values remain dependent on accurate original entries. Stock movements do not create entries in the existing accounting transactions table automatically.
 - Before live use, confirm that existing Supabase RLS policies isolate each user's records and that only authorized staff have accounts.
 
 IMPORTANT TRANSFER DISTINCTION
@@ -183,3 +183,72 @@ If the rental register does not save new units or the rent due/payment tables ar
 FOLLOW-UP REQUIRED SUPABASE MIGRATIONS
 Run GC_ATOMIC_RENT_PAYMENT.sql in Supabase SQL Editor before using the updated rent-payment form. It records rental_payments and transactions atomically in one PostgreSQL transaction.
 GC_TEACHER_NAPSA_RETURN.sql creates the separate teacher return table and owner-only RLS policies. Run it if the teacher return register is required and has not already been installed.
+
+
+LATEST AUDIT REPAIR NOTES (30 OCTOBER 2026)
+- Shop sales and credit-payment SQL validate required dates, payment methods and two-decimal money values. Credit sales cannot silently record an initial payment against an unknown channel.
+- Credit payments preserve the original sale payment method; cancellation refunds initial and later credit payments separately using the recorded payment channels (initial credit-sale payments must be recorded through the credit-payment form).
+- Sale cancellation now fails atomically if the original stock movement cannot be found or stock/sale updates fail.
+- Shop, stock and backup table reads use paginated range queries instead of fixed 1,000/1,500 row caps. A failed read is surfaced rather than displayed as an empty table.
+- Backup format version 2 includes fixed assets, teacher NAPSA returns, payroll advances, leave and attendance, and the existing expense ledgers.
+- Restore now includes those tables and calls GC_RESTORE_SEQUENCE_FIX.sql to resynchronise identity sequences after explicit-ID upserts.
+- Channel balances use the transactions ledger plus transfers only, avoiding duplicate counting of payments that already create transaction rows.
+
+SQL ORDER
+1. Run GC_ENHANCEMENTS.sql.
+2. Run GC_SHOPS_UPGRADE.sql.
+3. Run GC_SHOPS_ATOMIC_OPERATIONS.sql.
+4. Run GC_RESTORE_SEQUENCE_FIX.sql (needed for the restore sequence-repair RPC).
+5. Run other module migrations only if their corresponding modules are used: GC_EXPENSES_UPGRADE.sql, GC_FIXED_ASSETS.sql, GC_TEACHER_NAPSA_RETURN.sql, GC_RENTALS_FIX.sql, GC_PAYABLES_UPGRADE.sql and SUPABASE_MIGRATION.sql. Apply prerequisites documented at the top of each SQL file.
+
+
+LATEST SHOP / BACKUP HARDENING (30 OCTOBER 2026)
+- The shop upgrade only replaces the original autogenerated movement-type check; custom check constraints are preserved and the migration is safe to re-run.
+- Stock restock, damage and expiry movements use one owner-scoped RPC so movement and quantity updates commit together. Manual sales/expenses are disabled; sales use the atomic receipt workflow, and damage/expiry create matching expense transactions.
+- Customer duplicates are blocked in the form and by a normalized unique index when no historical duplicates exist. If duplicates already exist, the migration preserves them and the form still blocks ordinary duplicate submissions.
+- Receipts print every line item and historical cost of goods sold uses each sale item's saved unit cost. Cancelled sales are excluded.
+- Cancellation asks for the actual refund channel; later credit repayments are refunded using their recorded payment channels.
+- Sales, movement and audit views no longer truncate at fixed display counts; their underlying reads are paginated.
+- Backup JSON is validated before download and records app/format version metadata. Restore validates the format and table arrays, previews record counts, restores audit history through an owner-checked RPC, repairs identity sequences, refreshes affected sections and reports counts per table.
+- Restore remains table-by-table, not one database-wide transaction. If interrupted, earlier tables may already have been restored; retrying the same backup is idempotent for matching IDs.
+- Apply SQL in this order: GC_ENHANCEMENTS.sql, GC_SHOPS_UPGRADE.sql, GC_SHOPS_ATOMIC_OPERATIONS.sql, GC_RESTORE_SEQUENCE_FIX.sql.
+- Static JavaScript and ZIP checks are performed on this package. No live Supabase execution, RLS test or real-browser workflow test is claimed.
+
+
+ADDITIONAL SHOP VALIDATION UPDATE (30 OCTOBER 2026)
+- Credit sales are recorded with zero initial payment; later payments are entered separately so their channels are captured. Non-credit sales must be paid in full.
+- Cancelled credit sales refund all later credit repayments, including sales with zero initial payment.
+- Product creation records opening stock movement atomically; inactive products cannot be sold.
+- Product names, product codes and barcodes are protected against new duplicates when historical data permits safe unique indexes.
+- Stock movement value/quantity precision and amount calculations are validated.
+- Shop revenue and profit are based on completed receipts and saved historical item costs, with damage/expiry losses shown separately.
+- Reconciliation date/value validation and shop-credit arrears have been improved.
+- Pupil fee waivers are not inferred because no verified fee-adjustment schema/rules exist in the supplied project files. Supplier restocks still need supplier invoices/payables recorded through Trade Payables.
+
+LATEST AUDIT REPAIRS
+The package includes additional fixes for CSV parsing/validation, pupil attendance marking, teacher-return refresh resilience, receipt printing, product edit validation, normalized customer phone matching, sale financial consistency and idempotent audit restore. Apply the updated GC_SHOPS_ATOMIC_OPERATIONS.sql again after GC_ENHANCEMENTS.sql and GC_SHOPS_UPGRADE.sql; it is designed to be re-runnable. Run GC_RESTORE_SEQUENCE_FIX.sql for restore sequence repair. Back up the live Supabase project before applying migrations.
+
+LATEST AUDIT REPAIR NOTES (30 OCT 2026)
+The current package includes direct sale-to-stock-movement links, reasoned sale cancellation, original-channel credit refunds, historical opening-stock dates, product cost history, stronger backup validation/preview, movement date filtering, and administrator-only identity sequence repair. The updated SQL is included in the package. Do not run migrations until the package updates are complete and the user explicitly confirms this is the final ZIP update.
+
+
+LATEST ADDITIONAL AUDIT REPAIRS (2026-10-30)
+- Payroll cannot be marked Paid without an actual payment date; payment dates cannot predate the pay period.
+- Teacher NAPSA return account, year and month are visible and editable rather than silently hardcoded; return period and gross wage are validated. Contribution-rate rules remain unchanged and should be checked against the employer's official NAPSA guidance before use.
+- Backup format version 3 records unavailable optional tables explicitly, still requires core tables, and restore accepts legacy version 2 backups. Restore produces a per-table result report and skips optional tables that were not included. Restore remains sequential, not database-wide atomic.
+- Shop sale items retain original selling price and flag manual price overrides. Credit payments store their accounting transaction reference and remaining balance.
+- A dedicated shop refund ledger records each refund against its source sale/payment, channel, date, reason and accounting transaction. Cancellation is blocked when the sale has missing item/product links or the refund date predates a payment.
+- Stock movements now retain before/after quantities; future-dated manual movements and restocking archived products are rejected.
+- Audit restore batches are limited to 5,000 entries. Identity-sequence repair includes the refund ledger.
+- These changes are static package updates only. No Supabase SQL has been executed and no live RLS/database/browser test is claimed.
+
+
+LATEST AUDIT REPAIR UPDATE (30 OCTOBER 2026)
+- Teacher NAPSA employer account number is no longer prefilled with a hardcoded account value. Each return requires the account number to be entered.
+- Teacher return employer and employee contribution rates are separately editable per return and saved with the record. The application does not certify statutory compliance; confirm applicable rates, caps and wage definitions with NAPSA before filing.
+- Teacher return RLS now requires administrator role and a worker owned by the same account whose job title is Teacher or Owner.
+- Administrator data refresh now retains the last successfully loaded module data when an individual query fails, rather than replacing that module's data with an empty list. Failed refreshes are logged.
+- Dashboard payroll movements now use actual payment_date when available and avoid adding a payroll row that already has a linked transaction_id.
+- Service-worker cache advanced to v14 so deployed clients request the updated application shell.
+- Identity sequence repair now reports individual table failures as database warnings and fails clearly when the role table needed for administrator verification is absent.
+- No SQL was run. Live schema compatibility, RLS behaviour and browser workflows remain unverified.
