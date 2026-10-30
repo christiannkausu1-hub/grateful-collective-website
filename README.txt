@@ -8,7 +8,7 @@ Contents include the existing website and an additive Supabase migration. Existi
 
 DEPLOY
 1. Download and unzip the complete package.
-2. Database migrations: back up the Supabase project first. If not already applied, run SUPABASE_MIGRATION.sql / GC_ENHANCEMENTS.sql as appropriate for your existing deployment. Then run the new additive GC_SHOPS_UPGRADE.sql once in Supabase Dashboard > SQL Editor to add shop product metadata, receipts, customer credit balances/payments and stock-loss adjustment support. It does not drop existing tables or records and is safe to re-run. Do not skip the shop upgrade or the new shop forms will not save.
+2. Database migrations: back up the Supabase project first. If not already applied, run SUPABASE_MIGRATION.sql / GC_ENHANCEMENTS.sql as appropriate for your existing deployment. Then run GC_SHOPS_UPGRADE.sql if it has not already been applied. After that, run GC_SHOPS_ATOMIC_OPERATIONS.sql in Supabase Dashboard > SQL Editor. The atomic operations migration makes each shop sale, credit payment and cancellation a single database transaction, including stock and accounting updates. Both migrations are additive and do not drop existing tables or records.
 3. Commit/upload the package contents to the ROOT of the connected GitHub repository (replace the existing files when prompted). Cloudflare Pages should redeploy automatically.
 4. Wait for the Cloudflare Pages deployment to finish, then open the website and sign in. If the PWA shows an old version, close it and reopen; service worker update checking is enabled.
 5. Test each feature using a small test record before relying on it for bookkeeping.
@@ -20,7 +20,7 @@ NEW FEATURES
 - Reports use the selected date range for accounting transactions, rent receipts, lunch/test receipts, payroll and supplier payments.
 - Overdue rent periods and overdue supplier invoices are surfaced in the dashboard arrears panel. School fee balances remain in the pupil register using the configured grade fees and recorded amount paid.
 - Database triggers record INSERT, UPDATE and DELETE events for supported existing and new tables. Audit rows contain old/new row values when available.
-- Stock register supports separate TUCK SHOP, SALOON and GROCERY products, quantity, unit cost, selling price, sales, restocking and item-linked expenses. Stock movements are separate from the existing accounting transaction list to avoid automatic double-counting.
+- Stock register supports separate TUCK SHOP, SALOON and GROCERY products, quantity, unit cost, selling price, sales, restocking and item-linked expenses. Shop sales, credit payments and cancellations use database RPC transactions so related stock, receipt, payment and accounting writes succeed or roll back together. Stock movements are separate from the existing accounting transaction list to avoid automatic double-counting.
 - Export secure backup downloads JSON for supported tables. Restore JSON upserts records belonging to the signed-in user; it can overwrite matching IDs. Always export a fresh backup first.
 
 RECOVERY
@@ -178,3 +178,8 @@ Run the updated SUPABASE_MIGRATION.sql in Supabase SQL Editor before deploying. 
 
 RENTAL REGISTER / RENT DUE FIX
 If the rental register does not save new units or the rent due/payment tables are empty, open Supabase Dashboard -> SQL Editor and run GC_RENTALS_FIX.sql from this package once. It only adds missing rental columns and backfills missing start dates; it does not delete existing rental records or payments. Then publish the updated website files.
+
+
+FOLLOW-UP REQUIRED SUPABASE MIGRATIONS
+Run GC_ATOMIC_RENT_PAYMENT.sql in Supabase SQL Editor before using the updated rent-payment form. It records rental_payments and transactions atomically in one PostgreSQL transaction.
+GC_TEACHER_NAPSA_RETURN.sql creates the separate teacher return table and owner-only RLS policies. Run it if the teacher return register is required and has not already been installed.

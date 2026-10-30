@@ -1,0 +1,47 @@
+THE GRATEFUL COLLECTIVE — FUNCTIONAL REPAIR NOTES
+
+Repairs applied to the existing website package:
+- Removed the separate legacy pupil, payroll and shop card-collapsing handlers and replaced them with one idempotent card setup. It does not clone headings, does not run a whole-page MutationObserver, and ignores interactive controls so action buttons do not toggle cards. Trade Payables remains excluded.
+- Kept the class-list action independent from card toggling.
+- Kept Dashboard LEFT TO PAY and Workers & Payroll total on one selected-month unpaid-net-pay calculation.
+- Removed NAPSA from ordinary Workers & Payroll entry, calculation, edit modal, payslip and CSV export. Teacher NAPSA return registration remains a separate feature. Existing historical NAPSA database values are not deleted or rewritten.
+- Reworked rent-payment save order to create the rental payment, create the linked income transaction, and explicitly check rollback and link-update failures.
+- Reworked rent-payment deletion to remove the linked transaction first, then the payment; if payment deletion fails, the transaction is restored and the rental row is relinked to its new transaction ID.
+- Preserved all 19 original package files, including assets, manifest, service worker and SQL migration scripts. Every file is at the ZIP root.
+
+Static validation performed:
+- ZIP integrity/CRC check passed.
+- Inline JavaScript syntax checked with Node.js.
+- Duplicate HTML IDs: none found.
+- Card handler audit: one card setup system remains; legacy pupil/payroll/shop card setup scripts removed.
+- Ordinary payroll NAPSA input/edit field removed; separate teacher return feature retained.
+
+Limitations:
+- No live browser interaction test was run.
+- No live Supabase/RLS test was run and no SQL migration was executed.
+- Multi-table rental operations now perform checked compensating actions, but true atomicity requires a Supabase database RPC/transaction. If the app loses connectivity during a compensating action, manual reconciliation may still be required; the interface reports that failure.
+- Existing database records are not modified by building this package.
+
+
+FOLLOW-UP AUDIT ROUND (2026-10-30)
+- Restricted service-worker cache deletion to caches named grateful-collective-*; other applications' origin caches are preserved.
+- Updated the cache version and made offline fallback use only this app's own cache.
+- Fixed report Clear Filters so it clears date range fields as well as text/area/type filters.
+- Moved injected CSS blocks inside the HTML document rather than leaving style elements after </html>.
+- Re-ran static HTML/JavaScript/ZIP checks. Live Supabase and real-browser workflow testing remain outstanding.
+
+FOLLOW-UP REPAIR ROUND (2026-10-30)
+- Replaced multi-request rent payment insert/link/rollback with one PostgreSQL RPC transaction (GC_ATOMIC_RENT_PAYMENT.sql).
+- Corrected rental_payments.transaction_id additive column type from bigint to uuid to match the existing transactions UUID schema.
+- Narrowed teacher-return MutationObserver from the entire document body to the payroll page class only; refreshes teacher choices after loadRecords completes.
+- Added setup instructions for atomic rent RPC and separate teacher return table migration.
+- Live RLS verification and browser end-to-end tests still require the authenticated Supabase project.
+
+
+FOLLOW-UP REPAIR ROUND (2026-10-30)
+- Added GC_SHOPS_ATOMIC_OPERATIONS.sql with owner-scoped SECURITY INVOKER RPCs for shop sales, credit payments and cancellations.
+- Updated the shop UI to use those RPCs instead of separate client-side writes, preventing partial shop transactions when a related database write fails.
+- Removed the redundant final payroll MutationObserver that could fall back to watching the entire document body.
+- Updated deployment instructions and package inventory.
+- Static checks: all 17 inline script blocks passed Node.js syntax checks; service-worker.js passed; duplicate HTML IDs: none; ZIP CRC passed; all 21 files are at ZIP root.
+- Live Supabase migration execution, RLS/grant validation and authenticated browser workflows have not been performed. The atomic shop SQL assumes the transactions columns already used by the existing application are present in the live database.

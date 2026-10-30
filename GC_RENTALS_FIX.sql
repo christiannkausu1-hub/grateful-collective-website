@@ -5,7 +5,7 @@ ALTER TABLE public.rental_units ADD COLUMN IF NOT EXISTS due_day integer;
 ALTER TABLE public.rental_payments ADD COLUMN IF NOT EXISTS period_start date;
 ALTER TABLE public.rental_payments ADD COLUMN IF NOT EXISTS method text;
 ALTER TABLE public.rental_payments ADD COLUMN IF NOT EXISTS notes text;
-ALTER TABLE public.rental_payments ADD COLUMN IF NOT EXISTS transaction_id bigint;
+ALTER TABLE public.rental_payments ADD COLUMN IF NOT EXISTS transaction_id uuid;
 
 -- Backfill start dates only where missing, using created_at when available.
 DO $$
