@@ -141,3 +141,5 @@ LATEST PASS — VERIFIED CODE CORRECTIONS
 - Payroll creation now checks for an existing record for the same worker and pay period before inserting, and reports query failures rather than proceeding blindly.
 - Service-worker cache advanced to grateful-collective-v15 so installed clients fetch the updated application shell.
 - All other unverified items remain subject to live Supabase schema/RLS and browser workflow review; this pass does not claim 150 independently confirmed defects were found or fixed.
+
+- Restored automatic teacher NAPSA deduction in teacher payroll edits: 5% of basic pay, rounded to the nearest ngwee; non-teacher payroll records remain at 0. The deduction reduces teacher net pay.
