@@ -252,3 +252,11 @@ LATEST AUDIT REPAIR UPDATE (30 OCTOBER 2026)
 - Service-worker cache advanced to v14 so deployed clients request the updated application shell.
 - Identity sequence repair now reports individual table failures as database warnings and fails clearly when the role table needed for administrator verification is absent.
 - No SQL was run. Live schema compatibility, RLS behaviour and browser workflows remain unverified.
+
+
+DASHBOARD TOTALS / LEFT TO PAY UPDATE
+- Dashboard refresh now recalculates company positives, negatives and performance chart after records load.
+- LEFT TO PAY combines unpaid payroll for the selected payroll month and all outstanding supplier payable balances.
+- Payroll section LEFT TO PAY remains payroll-only.
+- Service worker cache version bumped to v18.
+- No database schema change or SQL migration is required for this code update.
