@@ -876,6 +876,51 @@ hr,.divider{border-color:#9CA3AF!important}
 </style>
 
 <script src="gc-dashboard-totals-repair.js"></script>
+
+<script id="gc-dashboard-single-source-final-fix">
+/* Final dashboard authority: keep dashboard cards and chart aligned with the
+   company movement ledger produced by the dashboard's section aggregator. */
+(function(){
+  const byId=id=>document.getElementById(id);
+  const fmt=n=>typeof window.money==='function'?window.money(n):'K'+Number(n||0).toFixed(2);
+  function update(){
+    const chart=byId('gcDashChart'); if(!chart)return;
+    const ledger=Array.isArray(window.gcCompanyMovements)?window.gcCompanyMovements:[];
+    const from=byId('gcDashFrom')?.value||'';
+    const to=byId('gcDashTo')?.value||'';
+    const period=byId('gcDashPeriod')?.value||'all';
+    const now=new Date().toISOString().slice(0,10);
+    let start='',end='';
+    if(period==='month'){start=now.slice(0,7)+'-01';end=now}
+    else if(period==='year'){start=now.slice(0,4)+'-01-01';end=now}
+    else if(period==='custom'||period==='term'){start=from;end=to}
+    const rows=ledger.filter(r=>{const d=String(r.date||'');return (!start||d>=start)&&(!end||d<=end)&&Number.isFinite(Number(r.amount))&&Number(r.amount)>0});
+    const positives=rows.filter(r=>String(r.type).toLowerCase()==='income').reduce((a,r)=>a+Number(r.amount),0);
+    const negatives=rows.filter(r=>String(r.type).toLowerCase()==='expense').reduce((a,r)=>a+Number(r.amount),0);
+    if(byId('income'))byId('income').textContent=fmt(positives);
+    if(byId('expenses'))byId('expenses').textContent=fmt(negatives);
+    if(byId('net'))byId('net').textContent=fmt(positives-negatives);
+    // Chart reads the exact same filtered ledger as the three headline totals.
+    const endDate=new Date((end||now)+'T12:00:00');
+    const months=[];
+    for(let i=5;i>=0;i--){const d=new Date(endDate.getFullYear(),endDate.getMonth()-i,1);months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:d.toLocaleDateString('en',{month:'short'}),income:0,expense:0})}
+    rows.forEach(r=>{const m=months.find(x=>x.key===String(r.date||'').slice(0,7));if(m){if(String(r.type).toLowerCase()==='income')m.income+=Number(r.amount);else if(String(r.type).toLowerCase()==='expense')m.expense+=Number(r.amount)}});
+    const max=Math.max(1,...months.flatMap(m=>[m.income,m.expense]));
+    chart.innerHTML=months.map(m=>'<div class="gc-month-column"><div class="gc-month-bars"><div class="gc-month-bar income" title="Positives '+fmt(m.income)+'" style="height:'+Math.max(2,m.income/max*100)+'%"></div><div class="gc-month-bar expense" title="Negatives '+fmt(m.expense)+'" style="height:'+Math.max(2,m.expense/max*100)+'%"></div></div><div class="gc-month-label">'+m.label+'</div></div>').join('');
+  }
+  window.gcRefreshDashboardFinancials=update;
+  window.addEventListener('gcCompanyMovementsUpdated',update);
+  const oldRender=window.render;
+  if(typeof oldRender==='function')window.render=function(){const result=oldRender.apply(this,arguments);update();return result};
+  const oldLoad=window.loadRecords;
+  if(typeof oldLoad==='function')window.loadRecords=async function(){const result=await oldLoad.apply(this,arguments);update();return result};
+  document.addEventListener('change',e=>{if(e.target&&['gcDashPeriod','gcDashFrom','gcDashTo'].includes(e.target.id))setTimeout(update,0)});
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(update,0));
+  window.addEventListener('focus',update);
+  setTimeout(update,0);
+})();
+</script>
+
 </body></html>');w.document.close()};
 window.gcCancelSale=async id=>{if(window.gcCancellingSale)return;window.gcCancellingSale=true;try{const sale=gcShopSales.find(x=>String(x.id)===String(id));if(!sale||sale.status!=='COMPLETED')return;if(!await themedConfirm('Cancel this sale, restore its stock and record any refund?'))return;const suggested=['Cash','Bank','Airtel Money','MTN MoMo','Other'].includes(sale.payment_method)?sale.payment_method:'Other';const refundMethod=prompt('Refund channel (Cash, Bank, Airtel Money, MTN MoMo or Other). Leave blank to preserve each original payment channel:',suggested);if(refundMethod===null)return;if(refundMethod!==''&&!['Cash','Bank','Airtel Money','MTN MoMo','Other'].includes(refundMethod)){appAlert('Choose a valid refund channel or leave blank to preserve original channels.');return}const reason=prompt('Reason for cancellation (required):','');if(reason===null)return;if(!reason.trim()){appAlert('Enter a cancellation reason.');return}const {data,error}=await sb.rpc('gc_cancel_shop_sale',{p_sale_id:Number(id),p_refund_date:today,p_refund_method:refundMethod||null,p_reason:reason.trim()});if(error){appAlert('Sale cancellation was not completed: '+error.message+'. No partial cancellation should be committed.');return}try{await gcLoadExtra();await gcLoadShopAdvanced();gcRenderExtra();gcRenderShopAdvanced();toast('Sale cancelled; stock and refund accounting updated')}catch(refreshError){appAlert('Sale cancellation was completed, but the screen could not refresh: '+refreshError.message+'. Do not cancel it again; refresh the page.')}}finally{window.gcCancellingSale=false}};
 $('gcStockSearch').addEventListener('input',gcRenderExtra);$('gcStockShopFilter').addEventListener('change',gcRenderExtra);$('gcStockStatusFilter').addEventListener('change',gcRenderExtra);$('gcMovementFrom').addEventListener('change',gcRenderExtra);$('gcMovementTo').addEventListener('change',gcRenderExtra);$('gcMovementFilterReset').onclick=()=>{$('gcMovementFrom').value='';$('gcMovementTo').value='';gcRenderExtra()};$('gcStockExport').onclick=()=>download('grateful-collective-stock.csv',[['Shop','Product','Code','Barcode','Category','Supplier','Quantity','Reorder level','Unit cost','Selling price','Stock value'],...gcProducts.map(p=>[p.shop,p.product_name,p.product_code,p.barcode,p.category,p.supplier_name,p.quantity,p.reorder_level,p.unit_cost,p.selling_price,Number(p.quantity)*Number(p.unit_cost)])]);
@@ -1174,5 +1219,50 @@ svg[stroke],svg path[stroke],svg line[stroke],svg polyline[stroke],svg circle[st
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #4B5563!important}
 hr,.divider{border-color:#9CA3AF!important}
 </style>
+
+<script id="gc-dashboard-single-source-final-fix">
+/* Final dashboard authority: keep dashboard cards and chart aligned with the
+   company movement ledger produced by the dashboard's section aggregator. */
+(function(){
+  const byId=id=>document.getElementById(id);
+  const fmt=n=>typeof window.money==='function'?window.money(n):'K'+Number(n||0).toFixed(2);
+  function update(){
+    const chart=byId('gcDashChart'); if(!chart)return;
+    const ledger=Array.isArray(window.gcCompanyMovements)?window.gcCompanyMovements:[];
+    const from=byId('gcDashFrom')?.value||'';
+    const to=byId('gcDashTo')?.value||'';
+    const period=byId('gcDashPeriod')?.value||'all';
+    const now=new Date().toISOString().slice(0,10);
+    let start='',end='';
+    if(period==='month'){start=now.slice(0,7)+'-01';end=now}
+    else if(period==='year'){start=now.slice(0,4)+'-01-01';end=now}
+    else if(period==='custom'||period==='term'){start=from;end=to}
+    const rows=ledger.filter(r=>{const d=String(r.date||'');return (!start||d>=start)&&(!end||d<=end)&&Number.isFinite(Number(r.amount))&&Number(r.amount)>0});
+    const positives=rows.filter(r=>String(r.type).toLowerCase()==='income').reduce((a,r)=>a+Number(r.amount),0);
+    const negatives=rows.filter(r=>String(r.type).toLowerCase()==='expense').reduce((a,r)=>a+Number(r.amount),0);
+    if(byId('income'))byId('income').textContent=fmt(positives);
+    if(byId('expenses'))byId('expenses').textContent=fmt(negatives);
+    if(byId('net'))byId('net').textContent=fmt(positives-negatives);
+    // Chart reads the exact same filtered ledger as the three headline totals.
+    const endDate=new Date((end||now)+'T12:00:00');
+    const months=[];
+    for(let i=5;i>=0;i--){const d=new Date(endDate.getFullYear(),endDate.getMonth()-i,1);months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:d.toLocaleDateString('en',{month:'short'}),income:0,expense:0})}
+    rows.forEach(r=>{const m=months.find(x=>x.key===String(r.date||'').slice(0,7));if(m){if(String(r.type).toLowerCase()==='income')m.income+=Number(r.amount);else if(String(r.type).toLowerCase()==='expense')m.expense+=Number(r.amount)}});
+    const max=Math.max(1,...months.flatMap(m=>[m.income,m.expense]));
+    chart.innerHTML=months.map(m=>'<div class="gc-month-column"><div class="gc-month-bars"><div class="gc-month-bar income" title="Positives '+fmt(m.income)+'" style="height:'+Math.max(2,m.income/max*100)+'%"></div><div class="gc-month-bar expense" title="Negatives '+fmt(m.expense)+'" style="height:'+Math.max(2,m.expense/max*100)+'%"></div></div><div class="gc-month-label">'+m.label+'</div></div>').join('');
+  }
+  window.gcRefreshDashboardFinancials=update;
+  window.addEventListener('gcCompanyMovementsUpdated',update);
+  const oldRender=window.render;
+  if(typeof oldRender==='function')window.render=function(){const result=oldRender.apply(this,arguments);update();return result};
+  const oldLoad=window.loadRecords;
+  if(typeof oldLoad==='function')window.loadRecords=async function(){const result=await oldLoad.apply(this,arguments);update();return result};
+  document.addEventListener('change',e=>{if(e.target&&['gcDashPeriod','gcDashFrom','gcDashTo'].includes(e.target.id))setTimeout(update,0)});
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(update,0));
+  window.addEventListener('focus',update);
+  setTimeout(update,0);
+})();
+</script>
+
 </body>
 </html>
